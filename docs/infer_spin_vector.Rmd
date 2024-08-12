@@ -5,7 +5,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,warning = FALSE, message = FALSE)
 ```
 
 ## An example implementation of spin vector component estimation from Statcast data. I'm referencing the following whitepaper by Dr. Alan Nathan
