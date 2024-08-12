@@ -41,7 +41,7 @@ calculate_air_density <- function(altitude) {
 }
 ```
 
-## Estimating Drag Coefficient (K)
+## Estimating K
 
 ```{r estimate-drag-coefficient}
 estimate_k <- function(altitude = NULL) {
