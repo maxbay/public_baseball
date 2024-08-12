@@ -199,7 +199,6 @@ avg_spin <- sc_m1 %>%
   )
 ```
 
-
 ## Visualizing Spin Components
 
 ```{r visualize-spin}
@@ -241,5 +240,4 @@ p <- plot_ly(type = "scatter3d", mode = "lines") %>%
 
 p
 ```
-
 
