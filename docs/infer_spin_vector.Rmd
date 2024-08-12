@@ -1,0 +1,243 @@
+
+---
+title: "Infer Spin Vector"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## An example implementation of spin vector component estimation from Statcast data. I'm referencing the following whitepaper by Dr. Alan Nathan
+
+#### https://baseball.physics.illinois.edu/HawkeyeAveSpinComponents.pdf
+
+## Load Necessary Libraries
+
+```{r load-libraries}
+library(dplyr)
+library(tidyr)
+library(readr)
+library(plotly)
+```
+
+## Calculating Air Density
+
+
+```{r calculate-air-density}
+calculate_air_density <- function(altitude) {
+  sea_level_temp <- 288.15 # Standard temperature at sea level in Kelvin
+  sea_level_pressure <- 101325 # Standard pressure at sea level in Pascals
+  lapse_rate <- 0.0065 # Temperature lapse rate in K/m
+  gas_constant <- 287.05 # Specific gas constant for dry air in J/(kg·K)
+
+  temperature <- sea_level_temp - lapse_rate * altitude
+
+  pressure <- sea_level_pressure * (1 - (lapse_rate * altitude / sea_level_temp)) ^ (9.80665 / (gas_constant * lapse_rate))
+
+  air_density <- pressure / (gas_constant * temperature)
+
+  return(air_density)
+}
+```
+
+## Estimating Drag Coefficient (K)
+
+```{r estimate-drag-coefficient}
+estimate_k <- function(altitude = NULL) {
+  sea_level_density <- 1.225 # Air density at sea level in kg/m^3
+  k0 <- 5.383e-03 # Base drag coefficient
+
+  air_density <- calculate_air_density(altitude)
+
+  k <- k0 * (sea_level_density / air_density)
+
+  return(k)
+}
+```
+
+## Adding Release Metrics to the Dataset
+
+```{r add-release-metrics}
+add_release_metrics <- function(df, altitude_df) {
+  z_constant <- 32.174 # Gravity constant in ft/s^2
+  
+  df <- df %>% 
+    left_join(altitude_df, by = 'home_team') # Joining altitude data
+  
+  df <- df %>%
+    mutate(
+      yR = 60.5 - release_extension, # Distance to home plate
+      tR = (-vy0 - sqrt(vy0^2 - 2 * ay * (50 - yR))) / ay,
+      vxR = vx0 + ax * tR,
+      vyR = vy0 + ay * tR,
+      vzR = vz0 + az * tR,
+      tf = (-vyR - sqrt(vyR^2 - 2 * ay * (yR - 17/12))) / ay,
+      vxbar = (2 * vxR + ax * tf) / 2,
+      vybar = (2 * vyR + ay * tf) / 2,
+      vzbar = (2 * vzR + az * tf) / 2,
+      vbar = sqrt(vxbar^2 + vybar^2 + vzbar^2),
+      adrag = -(ax * vxbar + ay * vybar + (az + z_constant) * vzbar) / vbar,
+      amagx = ax + adrag * vxbar / vbar,
+      amagy = ay + adrag * vybar / vbar,
+      amagz = az + adrag * vzbar / vbar + z_constant,
+      amag = sqrt(amagx^2 + amagy^2 + amagz^2),
+      K = estimate_k(altitude),
+      Cl = amag / (K * vbar^2),
+      s = 0.166 * log(0.336 / (0.336 - Cl)),
+      spinT = 78.92 * s * vbar,
+      spin_efficiency = pmin(spinT / release_spin_rate, 1)
+    ) %>%
+    drop_na(vx0, vy0, vz0, ax, ay, az, release_extension, release_spin_rate, spin_axis)
+  
+  return(df)
+}
+```
+
+
+
+## Solving Spin Components
+
+Two methods are implemented to solve for the spin components: `solve_spin_components_method_1` and `solve_spin_components_method_2`. These methods calculate the x, y, and z components of the spin vector based on the given spin efficiency and other parameters.
+
+### Method 1
+
+```{r solve-spin-components-1}
+solve_spin_components_method_1 <- function(df){
+  w_df <- df %>% 
+    mutate(
+      phi = spin_axis * pi / 180,
+      v = sqrt(vxR^2 + vyR^2 + vzR^2),
+      v_hat_x = vxR/v,
+      v_hat_y = vyR/v,
+      v_hat_z = vzR/v,
+      A = v_hat_x * cos(phi) + v_hat_z * sin(phi),
+      B = v_hat_y,
+      C = spin_efficiency,
+      R = sqrt(A^2 + B^2),
+      X = atan2(B, A),
+      Theta = asin(C / R) - X, 
+      spin_x = release_spin_rate * sin(Theta) * cos(phi),
+      spin_y = release_spin_rate * cos(Theta),
+      spin_z = release_spin_rate * sin(Theta) * sin(phi)
+    ) %>% 
+    select(spin_x,spin_y,spin_z)
+  
+  df <- cbind(df,w_df)
+  return(df)
+}
+```
+
+### Method 2
+
+```{r solve-spin-components-2}
+solve_spin_components_method_2 <- function(df) {
+  w_df <- df %>% 
+    mutate(
+      phi = spin_axis * pi / 180,
+      sign = ifelse(spin_efficiency < 0, 1, -1), # Default is RHP. Flips if LHP
+      cos_Theta = sign * abs(1 - spin_efficiency),
+      Theta = acos(cos_Theta),
+      spin_x = release_spin_rate * sin(Theta) * cos(phi),
+      spin_y = release_spin_rate * cos(Theta),
+      spin_z = release_spin_rate * sin(Theta) * sin(phi)
+    ) %>% 
+    select(spin_x,spin_y,spin_z)
+  
+  df <- cbind(df,w_df)
+  return(df)
+}
+```
+
+## Fetching Data
+
+
+```{r fetch-data}
+library(baseballr)
+season_data <- scrape_statcast_savant_pitcher('2024-01-10','2024-08-12',543037)
+
+altitude_data <- read_csv('https://raw.githubusercontent.com/maxbay/public_baseball/main/data/altitude_data.csv')
+season_data <- add_release_metrics(season_data,altitude_data)
+```
+
+## Applying Spin Component Methods
+
+We now apply the two methods for calculating spin components and compare their results.
+
+```{r apply-spin-methods}
+sc_m1 <- solve_spin_components_method_1(season_data)
+sc_m2 <- solve_spin_components_method_2(season_data)
+```
+
+### Compare Spin Component Methods
+
+```{r method1 try}
+sc_m1 %>% 
+  dplyr::filter(pitch_type == "FF") %>% 
+  select(player_name,pitch_type,spin_x,spin_y,spin_z) %>% 
+  head()
+```
+
+```{r method2 try}
+sc_m2 %>% 
+  dplyr::filter(pitch_type == "FF") %>% 
+  select(player_name,pitch_type,spin_x,spin_y,spin_z) %>% 
+  head()
+```
+
+## Averaging Spin Components
+
+This smooths over pitch-level error
+
+```{r average-spin-components}
+avg_spin <- sc_m1 %>% 
+  group_by(pitcher,player_name,pitch_type) %>% 
+  summarise(
+    spin_x = mean(spin_x,na.rm = TRUE),
+    spin_y = mean(spin_y,na.rm = TRUE),
+    spin_z = mean(spin_z,na.rm = TRUE)
+  )
+```
+
+## Visualizing Spin Components
+
+```{r visualize-spin}
+p_type = "FF"
+spin_vector <- as.numeric(avg_spin[avg_spin$pitch_type == p_type, c('spin_x', 'spin_y', 'spin_z')])
+
+spin_vector_norm = sqrt(sum(spin_vector^2))
+
+spin_vector <- spin_vector/spin_vector_norm
+
+max_length <- 1  # Adjust to set the range limit
+
+scaled_vector <- spin_vector / max(abs(spin_vector)) * max_length
+
+u <- seq(0, 2*pi, length = 100)
+v <- seq(0, pi, length = 100)
+
+x <- outer(cos(u), sin(v))
+y <- outer(sin(u), sin(v))
+z <- outer(rep(1, length(u)), cos(v))
+
+direction_vector <- c(0, -1, 0) * max_length
+  
+p <- plot_ly(type = "scatter3d", mode = "lines") %>%
+  add_surface(x = x, y = y, z = z, opacity = 0.5, colorscale = list(c(0,1), c("lightblue", "lightblue")), showscale = FALSE) %>%
+  add_trace(x = c(-scaled_vector[1], scaled_vector[1]), 
+            y = c(-scaled_vector[2], scaled_vector[2]), 
+            z = c(-scaled_vector[3], scaled_vector[3]), 
+            type = "scatter3d", mode = "lines", line = list(color = 'red', width = 5)) %>%
+  add_trace(x = c(0, direction_vector[1]), 
+            y = c(0, direction_vector[2]), 
+            z = c(0, direction_vector[3]), 
+            type = "scatter3d", mode = "lines+markers", line = list(color = 'green', width = 5), 
+            marker = list(size = 5, color = 'green', symbol = 'arrow-bar-down-open')) %>%
+  layout(scene = list(xaxis = list(title = 'X', range = c(-max_length, max_length)),
+                      yaxis = list(title = 'Y', range = c(-max_length, max_length)),
+                      zaxis = list(title = 'Z', range = c(-max_length, max_length)),
+                      camera = list(eye = list(x = -.8, y = 1.9, z = .8))))
+
+p
+```
+
