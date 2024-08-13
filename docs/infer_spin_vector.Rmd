@@ -21,7 +21,7 @@ library(readr)
 library(plotly)
 ```
 
-## Estimating Air Density
+## Estimate Air Density
 
 
 ```{r calculate-air-density}
@@ -41,7 +41,7 @@ calculate_air_density <- function(altitude) {
 }
 ```
 
-## Estimating K
+## Estimate K
 
 ```{r estimate-drag-coefficient}
 estimate_k <- function(altitude = NULL) {
@@ -56,7 +56,7 @@ estimate_k <- function(altitude = NULL) {
 }
 ```
 
-## Adding release direction vector, spin efficiency to data frame
+## Add release direction vector, spin efficiency to data frame
 
 ```{r add-release-metrics}
 add_release_metrics <- function(df, altitude_df) {
@@ -96,7 +96,7 @@ add_release_metrics <- function(df, altitude_df) {
 
 
 
-## Solving Spin Components
+## Solve Spin Components
 
 Two methods described by Dr. Nathan are implemented to solve for the spin components: `solve_spin_components_method_1` and `solve_spin_components_method_2`. These methods calculate the x, y, and z components of the spin vector based on the given spin efficiency and other parameters.
 
@@ -149,7 +149,7 @@ solve_spin_components_method_2 <- function(df) {
 }
 ```
 
-## Fetching Data
+## Fetch Data
 
 
 ```{r fetch-data}
@@ -160,7 +160,7 @@ altitude_data <- read_csv('https://raw.githubusercontent.com/maxbay/public_baseb
 season_data <- add_release_metrics(season_data,altitude_data)
 ```
 
-## Applying Spin Component Methods
+## Apply Spin Component Methods
 
 We now apply the two methods for calculating spin components and compare their results.
 
@@ -185,7 +185,7 @@ sc_m2 %>%
   head()
 ```
 
-## Averaging Spin Components
+## Average Spin Components
 
 This smooths over pitch-level error
 
@@ -199,7 +199,7 @@ avg_spin <- sc_m1 %>%
   )
 ```
 
-## Visualizing Spin Components
+## Visualize Spin Components
 
 ```{r visualize-spin}
 p_type = "FF"
