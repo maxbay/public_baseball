@@ -6,7 +6,8 @@ Welcome to my public baseball repository! This contains a collection of code (in
 
 Here’s a list of the notebooks you’ll find in the `/notebooks` directory:
 
-1. **[Command Confidence Ellipse](https://github.com/maxbay/public_baseball/blob/main/notebooks/notebooks/command_confellipse.ipynb)**
+
+1. **[Command Confidence Ellipse](https://github.com/maxbay/public_baseball/blob/main/notebooks/command_confellipse.ipynb)**
    - Uses vertical and horizontal release angle variance of fastball as proxy for command. Turns out this is pretty sticky between seasons. 
 
 2. **[Dynamic Spin Efficiency](https://github.com/maxbay/public_baseball/blob/main/notebooks/dynamic_spin_efficiency.ipynb)**
