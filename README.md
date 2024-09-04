@@ -1,7 +1,8 @@
 # Max Bay's Public Baseball Stuff
 
 Welcome to my public baseball repository! This contains a collection of code (in various forms) focused on things that interest me.
-[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/choice_fielder)
+
+[![X](https://about.x.com/content/dam/about-twitter/x/brand-toolkit/logo-black.png.twimg.1920.png)](https://twitter.com/choice_fielder)
 
 
 ## Apps
