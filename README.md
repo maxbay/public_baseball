@@ -1,4 +1,4 @@
-# Public Baseball Analysis
+# Max Bay's Public Baseball Stuff
 
 Welcome to my public baseball repository! This contains a collection of code (in various forms) focused on things that interest me.
 
