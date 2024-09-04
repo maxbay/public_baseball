@@ -1,6 +1,6 @@
 # Public Baseball Analysis
 
-Welcome to my public baseball analysis repository! This repository contains a collection of code (in various forms) focused on various research, demonstrations and modeling projects that interest me. 
+Welcome to my public baseball repository! This contains a collection of code (in various forms) focused on things that interest me.
 
 ## Notebooks
 
