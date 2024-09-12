@@ -353,9 +353,6 @@ display: none;
 </div>
 
 
-<div id="note-large-queries-will-raise-a-flag-server-side.-you-probably-want-to-limit-to-500-ids" class="section level4">
-<h4>NOTE: Large queries will raise a flag server side. You probably want
-to limit to &lt;500 IDs</h4>
 <p>This function parses the height string (in ft and in) and converts to
 float</p>
 <pre class="r"><code># convert height string from ft and in to ft
@@ -369,35 +366,52 @@ parse_height &lt;- function(height_str) {
   height_in_feet &lt;- feet + inches / 12
   return(height_in_feet)
 }</code></pre>
+<p>This chunks the ID list to ensure no single API call has more than
+500 IDs</p>
+<pre class="r"><code>chunk_list &lt;- function(lst, chunk_size) {
+  split(lst, ceiling(seq_along(lst) / chunk_size))
+}</code></pre>
 <p>The API call below takes player_id integer vector as input and builds
 a data frame with id, height and weight</p>
 <pre class="r"><code># fetch player heights given their IDs
 get_player_heights &lt;- function(player_ids) {
-  player_id_str &lt;- paste(player_ids, collapse = &#39;,&#39;)
-  
-  url &lt;- paste0(&#39;https://statsapi.mlb.com/api/v1/people?personIds=&#39;, player_id_str, &#39;&amp;fields=people,id,height,weight&#39;)
-  
-  # qery the API endpoint
-  response &lt;- GET(url)
-  
-  # raise error if the request was unsuccessful
-  stop_for_status(response)
-  
-  # parse the JSON response
-  json_data &lt;- content(response, &quot;text&quot;, encoding = &quot;UTF-8&quot;)
-  people_data &lt;- fromJSON(json_data)$people
-  
-  # convert to data frame and adjust the height
-  data &lt;- as.data.frame(people_data)
-  data$height &lt;- sapply(data$height, parse_height)
-  
-  return(data)
+  all_data &lt;- list()
+
+  # split player IDs into chunks
+  chunks &lt;- chunk_list(player_ids, 500)
+
+  for (chunk in chunks) {
+    # convert the chunk of player IDs to a comma-separated string
+    player_id_str &lt;- paste(chunk, collapse = &quot;,&quot;)
+    url &lt;- paste0(&#39;https://statsapi.mlb.com/api/v1/people?personIds=&#39;, player_id_str, &#39;&amp;fields=people,id,height,weight&#39;)
+
+    # get the response from the API
+    response &lt;- GET(url)
+
+    # check if the request was successful
+    if (http_status(response)$category != &quot;Success&quot;) {
+      stop(&quot;HTTP request failed&quot;)
+    }
+
+    # parse the JSON response
+    json_data &lt;- content(response, as = &quot;parsed&quot;, simplifyVector = TRUE)$people
+
+    # convert to a data frame and apply height parsing
+    data &lt;- as.data.frame(json_data)
+    data$height &lt;- sapply(data$height, parse_height)
+    all_data &lt;- append(all_data, list(data))
+    
+    # sleep to avoid overloading server
+    Sys.sleep(0.5)
+  }
+
+  # combine chunks into a single data frame
+  result_df &lt;- bind_rows(all_data)
+  return(result_df)
 }</code></pre>
-</div>
 <div id="example-query" class="section level2">
 <h2>Example Query</h2>
-<p>We can now fetch the heights of a couple of players and display the
-results. Below is an example of fetching heights for two players:</p>
+<p>We can now fetch the heights of a couple of players</p>
 <pre class="r"><code># example player IDs
 player_ids &lt;- c(694973, 573186)
 

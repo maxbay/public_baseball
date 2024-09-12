@@ -11,9 +11,6 @@ library(jsonlite)
 library(dplyr)
 ```
 
-#### NOTE: Large queries will raise a flag server side. You probably want to limit to <500 IDs
-
-
 This function parses the height string (in ft and in) and converts to float
 ```{r height-function}
 # convert height string from ft and in to ft
@@ -29,36 +26,58 @@ parse_height <- function(height_str) {
 }
 ```
 
+This chunks the ID list to ensure no single API call has more than 500 IDs
+```{r chunk ID list}
+chunk_list <- function(lst, chunk_size) {
+  split(lst, ceiling(seq_along(lst) / chunk_size))
+}
+
+```
+
 The API call below takes player_id integer vector as input and builds a data frame with id, height and weight
 
 ```{r api-function}
 # fetch player heights given their IDs
 get_player_heights <- function(player_ids) {
-  player_id_str <- paste(player_ids, collapse = ',')
-  
-  url <- paste0('https://statsapi.mlb.com/api/v1/people?personIds=', player_id_str, '&fields=people,id,height,weight')
-  
-  # qery the API endpoint
-  response <- GET(url)
-  
-  # raise error if the request was unsuccessful
-  stop_for_status(response)
-  
-  # parse the JSON response
-  json_data <- content(response, "text", encoding = "UTF-8")
-  people_data <- fromJSON(json_data)$people
-  
-  # convert to data frame and adjust the height
-  data <- as.data.frame(people_data)
-  data$height <- sapply(data$height, parse_height)
-  
-  return(data)
+  all_data <- list()
+
+  # split player IDs into chunks
+  chunks <- chunk_list(player_ids, 500)
+
+  for (chunk in chunks) {
+    # convert the chunk of player IDs to a comma-separated string
+    player_id_str <- paste(chunk, collapse = ",")
+    url <- paste0('https://statsapi.mlb.com/api/v1/people?personIds=', player_id_str, '&fields=people,id,height,weight')
+
+    # get the response from the API
+    response <- GET(url)
+
+    # check if the request was successful
+    if (http_status(response)$category != "Success") {
+      stop("HTTP request failed")
+    }
+
+    # parse the JSON response
+    json_data <- content(response, as = "parsed", simplifyVector = TRUE)$people
+
+    # convert to a data frame and apply height parsing
+    data <- as.data.frame(json_data)
+    data$height <- sapply(data$height, parse_height)
+    all_data <- append(all_data, list(data))
+    
+    # sleep to avoid overloading server
+    Sys.sleep(0.5)
+  }
+
+  # combine chunks into a single data frame
+  result_df <- bind_rows(all_data)
+  return(result_df)
 }
 ```
 
 ## Example Query
 
-We can now fetch the heights of a couple of players and display the results. Below is an example of fetching heights for two players:
+We can now fetch the heights of a couple of players
 
 ```{r example-usage}
 # example player IDs
