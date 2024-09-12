@@ -33,6 +33,7 @@ Here’s a list of the notebooks you’ll find in the `/notebooks` directory:
 ### R
 **[Infer 3D Spin Vector](https://maxbay.github.io/public_baseball/infer_spin_vector.html))**
    - This uses [Dr. Alan Nathan's method](https://baseball.physics.illinois.edu/HawkeyeAveSpinComponents.pdf) to infer the 3D spin vector components from tracking data
+
 **[Fetch Player Height Data](https://maxbay.github.io/public_baseball/fetch_player_height.html)**
    - Convenience functions for getting player height data via API endpoint
 
