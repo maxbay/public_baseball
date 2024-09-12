@@ -1,0 +1,72 @@
+
+---
+title: "Fetching MLB Player Height Data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(httr)
+library(jsonlite)
+library(dplyr)
+```
+
+#### NOTE: Large queries will raise a flag server side. You probably want to limit to <500 IDs
+
+
+This function parses the height string (in ft and in) and converts to float
+```{r height-function}
+# convert height string from ft and in to ft
+parse_height <- function(height_str) {
+  # split str into ft and in components
+  height_parts <- strsplit(height_str, "' ")[[1]]
+  feet <- as.numeric(height_parts[1])
+  inches <- as.numeric(gsub('"', '', height_parts[2]))
+  
+  # convert height to ft units
+  height_in_feet <- feet + inches / 12
+  return(height_in_feet)
+}
+```
+
+The API call below takes player_id integer vector as input and builds a data frame with id, height and weight
+
+```{r api-function}
+# fetch player heights given their IDs
+get_player_heights <- function(player_ids) {
+  player_id_str <- paste(player_ids, collapse = ',')
+  
+  url <- paste0('https://statsapi.mlb.com/api/v1/people?personIds=', player_id_str, '&fields=people,id,height,weight')
+  
+  # qery the API endpoint
+  response <- GET(url)
+  
+  # raise error if the request was unsuccessful
+  stop_for_status(response)
+  
+  # parse the JSON response
+  json_data <- content(response, "text", encoding = "UTF-8")
+  people_data <- fromJSON(json_data)$people
+  
+  # convert to data frame and adjust the height
+  data <- as.data.frame(people_data)
+  data$height <- sapply(data$height, parse_height)
+  
+  return(data)
+}
+```
+
+## Example Query
+
+We can now fetch the heights of a couple of players and display the results. Below is an example of fetching heights for two players:
+
+```{r example-usage}
+# example player IDs
+player_ids <- c(694973, 573186)
+
+# fetch the data
+player_df <- get_player_heights(player_ids)
+
+head(player_df)
+```
+
