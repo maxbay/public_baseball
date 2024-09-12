@@ -38,9 +38,3 @@ Here’s a list of the notebooks you’ll find in the `/notebooks` directory:
 
 **[Fetch Player Height Data](https://maxbay.github.io/public_baseball/fetch_player_height.html)**
    - Convenience functions for getting player height data via API endpoint
-
-## How to Use
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/maxbay/public_baseball.git
