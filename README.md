@@ -5,15 +5,10 @@ Welcome to my public baseball repository! This contains a collection of code (in
 
 ## Apps
 
-<div style="display: flex; align-items: center;">
-   <div>
-      **[Dynamic Dead Zone](https://dynamic-dead-zone.streamlit.app/)**
-      - One of the first cues batters have as to the shape of an incoming pitch is the arm slot of the pitcher. This app models the "expected" shape of a fastball as distribution conditional on pitcher scaled release point.
-   </div>
-   <div style="margin-left: 20px;">
-      <img src="https://raw.githubusercontent.com/maxbay/public_baseball/refs/heads/main/imgs/DDZ.png" alt="Dynamic Dead Zone" width="200" />
-   </div>
-</div>
+**[Dynamic Dead Zone](https://dynamic-dead-zone.streamlit.app/)**
+   - One of the first cues batters have as to the shape of an incoming pitch is the arm slot of the pitcher. This app models the "expected" shape of a fastball as distribution conditional on pitcher scaled release point.
+
+<img src="https://raw.githubusercontent.com/maxbay/public_baseball/refs/heads/main/imgs/DDZ.png" alt="Dynamic Dead Zone" width="350" />
 
 ## Projects in Both Python and R, Separated by Programming Language 
    
