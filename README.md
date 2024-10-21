@@ -6,7 +6,8 @@ Welcome to my public baseball repository! This contains a collection of code (in
 ## Apps
 
 **[Dynamic Dead Zone](https://dynamic-dead-zone.streamlit.app/)**
-   - One of the first cues batters have as to the shape of an incoming pitch is the arm slot of the pitcher. This app models the "expected" shape of a fastball as distribution conditional on pitcher scaled release point. 
+   - One of the first cues batters have as to the shape of an incoming pitch is the arm slot of the pitcher. This app models the "expected" shape of a fastball as distribution conditional on pitcher scaled release point.
+<img src="https://i.imgur.com/pAUAbt1.png alt="Dynamic Dead Zone" width="200" />
 
 ## Projects in Both Python and R, Separated by Programming Language 
    
