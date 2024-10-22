@@ -18,21 +18,26 @@ Here’s a list of the notebooks you’ll find in the `/notebooks` directory:
 
 **[Command Confidence Ellipse](https://github.com/maxbay/public_baseball/blob/main/notebooks/command_confellipse.ipynb)**
    - Uses vertical and horizontal release angle variance of fastball as proxy for command. Turns out this is pretty sticky between seasons. 
+<img src="https://raw.githubusercontent.com/maxbay/public_baseball/refs/heads/main/imgs/command_angle.png" alt="Command Confidence Ellipse" width="350" />
 
 **[Dynamic Spin Efficiency](https://github.com/maxbay/public_baseball/blob/main/notebooks/dynamic_spin_efficiency.ipynb)**
-   - Spin efficiency changes over the flight of a pitch because the ball drops over time. This looks at a couple theoretical examples. 
+   - Spin efficiency changes over the flight of a pitch because the ball drops over time. This looks at a couple theoretical examples.
+<img src="https://raw.githubusercontent.com/maxbay/public_baseball/refs/heads/main/imgs/spin_efficiency.png" alt="Dynamic Spin Efficiency" width="350" />
+
    
 **[Infer 3D Spin Vector](https://github.com/maxbay/public_baseball/blob/main/notebooks/infer_spin_vector.ipynb)**
    - This uses [Dr. Alan Nathan's method](https://baseball.physics.illinois.edu/HawkeyeAveSpinComponents.pdf) to infer the 3D spin vector components from tracking data
    - I also wrote this for use in R programming language [link here](https://maxbay.github.io/public_baseball/infer_spin_vector.html)
+<img src="https://raw.githubusercontent.com/maxbay/public_baseball/refs/heads/main/imgs/spin_vector.png" alt="Spin Components" width="350" />
+
 
 **[Fetch Player Height Data](https://github.com/maxbay/public_baseball/blob/main/notebooks/fetch_player_height.ipynb)**
    - Convenience functions for getting player height data via API endpoint
    - I also wrote this for use in R programming language [link here](https://maxbay.github.io/public_baseball/fetch_player_height.html)
 
-
 **[Release Angle to Plate](https://github.com/maxbay/public_baseball/blob/main/notebooks/releaes_angle_var.ipynb)**
    - Small changes in release angle can have a massive effect on the quality of a pitch. The notebook has some visualizations demonstrating this.
+<img src="https://raw.githubusercontent.com/maxbay/public_baseball/refs/heads/main/imgs/plate_angle.png" alt="Plate Angle" width="350" />
 
 ### R
 **[Infer 3D Spin Vector](https://maxbay.github.io/public_baseball/infer_spin_vector.html)**
